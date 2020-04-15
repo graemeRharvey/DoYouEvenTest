@@ -1,0 +1,16 @@
+CONSTANTS:
+  LOOKBACK: 20
+
+TEST_PATTERNS:
+- test
+- spec
+
+IGNORE_LIST:
+- README
+- docs/
+- .gitignore
+- Jenkinsfile
+- lerna.json
+- package.json
+- package-lock.json
+- yarn.lock
