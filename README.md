@@ -36,3 +36,6 @@ the environment variable `GIT_HOST=myinstance.git.com`._
 By default, the tool analyzes PRs targeted at `master`. 
 This can be changed by setting `-b target_branch`.
 
+### Output
+
+Upon execution, the tool writes an xlsx file with the results of all the repos it analyzed.
