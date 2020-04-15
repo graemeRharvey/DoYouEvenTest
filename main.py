@@ -15,11 +15,8 @@ def parse_arguments():
     Parse them args
     """
     parser = argparse.ArgumentParser()
-    # user_login_group = parser.add_mutually_exclusive_group(required=False)
-    # user_login_group.add_argument('-u', '--username', help="GitHub username")
-    # user_login_group.add_argument('-t', '--token', action=EnvDefault, envvar='GIT_API_TOKEN', 
-    #     help="GitHub token: set using -t or setting env var 'GIT_API_TOKEN'")
-    #parser.add_argument('-p', '--password', required=False, help="GitHub password")
+    # parser.add_argument('-u', '--username', required=False, help="GitHub username") 
+    # parser.add_argument('-p', '--password', required=False, help="GitHub password")
     parser.add_argument('-t', '--token', action=EnvDefault, envvar='GIT_API_TOKEN', 
         help="GitHub token: set using -t or setting env var 'GIT_API_TOKEN'")
     parser.add_argument('-e', '--enterprise', action='store_true', help="Enable Github Enterprise")
@@ -31,13 +28,13 @@ def parse_arguments():
         help="GitHub enterprise host: set using -g or setting env var 'GIT_HOST'")
     parsed_args = parser.parse_args()
     # if parsed_args.username and not parsed_args.password:
-    #     parser.error("If using a github username, you must also provide a password")
+    #     parser.error("If using a github username, you must also provide a password (use -p)")
     #     sys.exit()
     if parsed_args.enterprise and not parsed_args.githost:
         parser.error("-e requires use of -g to set host, or env var 'GIT_HOST' to be set.")
         sys.exit()
     if parsed_args.repository and "/" not in parsed_args.repository:
-        parser.error("repo name should also contain organization name like: organization/repo_name")
+        parser.error("Repo name should also contain organization name like: organization/repo_name")
         sys.exit()
     return parsed_args
 
@@ -45,7 +42,7 @@ def parse_arguments():
 def analyze_repo(repo, branch):
     is_valid = 0
     did_test = 0
-    # Grab PRs based on criteria (how far back to go?)
+
     pulls = repo.get_pulls(state='closed', sort='created', direction='desc', base=branch)
     page_num = 0
     while is_valid <= config.constants["LOOKBACK"]:
@@ -103,7 +100,7 @@ def main():
     if args.enterprise:
         # Enterprise
         base_url = f"https://{args.githost}/api/v3"
-        g = Github(base_url=base_url, login_or_token=args.token) # UPDATE
+        g = Github(base_url=base_url, login_or_token=args.token)
     else:
         # Github
         g = Github(args.token)
