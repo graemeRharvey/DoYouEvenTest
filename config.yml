@@ -1,5 +1,6 @@
 CONSTANTS:
-  LOOKBACK: 20
+  LOOKBACK: 10
+  WORKSHEET: PR_Analysis.xlsx
 
 TEST_PATTERNS:
 - test

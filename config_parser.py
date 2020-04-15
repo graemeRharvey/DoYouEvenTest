@@ -3,8 +3,8 @@ import io
 
 class Config:
 
-    def __init__(self):  
-        self.config_path = "config.yml"
+    def __init__(self, config_path):  
+        self.config_path = config_path
         self.raw_config = self.parse_config()
         self.ignore_list = self.parse_ignore_list()
         self.test_pattern_list = self.parse_test_pattern_list()

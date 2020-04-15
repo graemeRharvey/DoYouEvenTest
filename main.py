@@ -4,8 +4,11 @@ from github import Github
 import argparse
 from envdefault import EnvDefault
 import checks
-import logging
 from config_parser import Config
+import openpyxl
+
+config = Config("config.yml")
+row = 1
 
 def parse_arguments():
     """
@@ -39,9 +42,64 @@ def parse_arguments():
     return parsed_args
 
 
+def analyze_repo(repo, branch):
+    is_valid = 0
+    did_test = 0
+    # Grab PRs based on criteria (how far back to go?)
+    pulls = repo.get_pulls(state='closed', sort='created', direction='desc', base=branch)
+    page_num = 0
+    while is_valid <= config.constants["LOOKBACK"]:
+        pr_page = pulls.get_page(page_num)
+        if pr_page == []:
+            print("No more PRs left to process")
+            break
+        for pr in pr_page:
+            if is_valid == config.constants["LOOKBACK"]:
+                break
+            else:
+                files_list = pr.get_files()
+                if checks.pr_valid(files_list, config.ignore_list):
+                    is_valid+=1
+                    if checks.look_for_tests(files_list, config.test_pattern_list):
+                        did_test+=1
+        page_num += 1      
+    
+    write_spreadsheet(repo, is_valid, did_test)
+
+
+def write_spreadsheet_headings():
+    global row
+    report = openpyxl.Workbook()
+    sheet = report.active
+    sheet.title = "Summary"
+    sheet.cell(row=row, column=1, value="Repository")
+    sheet.cell(row=row, column=2, value="Total PRs Checked")
+    sheet.cell(row=row, column=3, value="Total Tested")
+    sheet.cell(row=row, column=4, value="% of PRs Tested")
+    report.save(config.constants["WORKSHEET"])
+    row+=1
+
+
+def write_spreadsheet(repo, num_analyzed, num_tested):
+    global row
+    report = openpyxl.load_workbook(config.constants["WORKSHEET"])
+    sheet = report["Summary"]
+    sheet.cell(row=row, column=1, value=repo.name)
+    sheet.cell(row=row, column=2, value=num_analyzed)
+    sheet.cell(row=row, column=3, value=num_tested)
+    if num_analyzed > 0:
+        percent = num_tested / num_analyzed * 100
+    else:
+        percent = 0
+    sheet.cell(row=row, column=4, value=percent)
+    report.save(config.constants["WORKSHEET"])
+    row+=1
+
+
 def main():
     args = parse_arguments()
-    config = Config()
+
+    print("Logging in to Github...")
     if args.enterprise:
         # Enterprise
         base_url = f"https://{args.githost}/api/v3"
@@ -50,40 +108,21 @@ def main():
         # Github
         g = Github(args.token)
 
-    # Get organization (For github enterprise)
-    #org = g.get_organization(args.organization)
-    #repos = org.get_repos()
+    print("Writing output template...")
+    write_spreadsheet_headings()
 
     repo = None
     if args.repository:
-        repo = g.get_repo(args.repository)
+        print(f"Analyzing repository: {args.repository}")
+        analyze_repo(g.get_repo(args.repository), args.branch)
     else:
+        print(f"Analyzing org: {args.organization}")
         org = g.get_organization(args.organization)
         repos = org.get_repos()
+        for repo in repos:
+            print(f"Analyzing repository: {repo.name}")
+            analyze_repo(repo, args.branch)
 
-    # Reduce list of repos? Any criteria?
-
-    is_valid = 0
-    did_test = 0
-    # Grab PRs based on criteria (how far back to go?)
-    pulls = repo.get_pulls(state='closed', sort='created', direction='desc', base=args.branch)
-    relevant_pulls = pulls[:config.constants["LOOKBACK"]]
-
-    for pr in relevant_pulls:
-        files_list = pr.get_files()
-
-        # Read files list
-        print(pr.title)
-        if checks.pr_valid(files_list, config.ignore_list):
-            print(str(pr.number) + " is valid.")
-            is_valid+=1
-            if checks.look_for_tests(files_list, config.test_pattern_list):
-                did_test+=1
-        else:
-            print(str(pr.number) + " is NOT valid.")
-    print("Of " + str(is_valid) + " PRs, " + str(did_test) + " were tested!")
-    percent = did_test / is_valid * 100
-    print("That's " + str(percent) + " percent tested!")
 
 if __name__ == '__main__':
     main()
