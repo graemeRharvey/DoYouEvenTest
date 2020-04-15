@@ -24,7 +24,7 @@ def parse_arguments():
     org_repo_group.add_argument('-o', '--organization', help="Organization to scan all repos from")
     org_repo_group.add_argument('-r', '--repository', help="Single repo to scan PRs in")
     parser.add_argument('-b', '--branch', default='master', help="Base branch to use")
-    parser.add_argument('-g', '--githost', action=EnvDefault, envvar='GIT_HOST', 
+    parser.add_argument('-g', '--githost', required=False, action=EnvDefault, envvar='GIT_HOST', 
         help="GitHub enterprise host: set using -g or setting env var 'GIT_HOST'")
     parsed_args = parser.parse_args()
     # if parsed_args.username and not parsed_args.password:
