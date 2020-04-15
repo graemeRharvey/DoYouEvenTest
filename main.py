@@ -15,8 +15,6 @@ def parse_arguments():
     Parse them args
     """
     parser = argparse.ArgumentParser()
-    # parser.add_argument('-u', '--username', required=False, help="GitHub username") 
-    # parser.add_argument('-p', '--password', required=False, help="GitHub password")
     parser.add_argument('-t', '--token', action=EnvDefault, envvar='GIT_API_TOKEN', 
         help="GitHub token: set using -t or setting env var 'GIT_API_TOKEN'")
     parser.add_argument('-e', '--enterprise', action='store_true', help="Enable Github Enterprise")
@@ -27,9 +25,6 @@ def parse_arguments():
     parser.add_argument('-g', '--githost', required=False, action=EnvDefault, envvar='GIT_HOST', 
         help="GitHub enterprise host: set using -g or setting env var 'GIT_HOST'")
     parsed_args = parser.parse_args()
-    # if parsed_args.username and not parsed_args.password:
-    #     parser.error("If using a github username, you must also provide a password (use -p)")
-    #     sys.exit()
     if parsed_args.enterprise and not parsed_args.githost:
         parser.error("-e requires use of -g to set host, or env var 'GIT_HOST' to be set.")
         sys.exit()
